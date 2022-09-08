@@ -21,15 +21,26 @@ where
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NodeIdx(usize);
+
+impl std::ops::Deref for NodeIdx {
+    type Target = usize;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Node {
-    idx: usize,
-    parent_idx: usize,
+    idx: NodeIdx,
+    parent_idx: NodeIdx,
     size: u32,
 }
 
 impl Node {
-    fn new(idx: usize) -> Self {
+    fn new(idx: NodeIdx) -> Self {
         Self {
             idx: idx,
             parent_idx: idx,
@@ -56,19 +67,20 @@ impl A {
     }
 }
 
-impl UnionFind<usize> for A {
-    fn add_element(&mut self) -> usize {
-        self.nodes.push(Node::new(self.nodes.len()));
+impl UnionFind<NodeIdx> for A {
+    fn add_element(&mut self) -> NodeIdx {
+        let idx = NodeIdx(self.nodes.len());
+        self.nodes.push(Node::new(idx));
 
-        self.nodes.len() - 1
+        idx
     }
 
-    fn union(&mut self, first_node: usize, second_node: usize) {
+    fn union(&mut self, first_node: NodeIdx, second_node: NodeIdx) {
         let first_set_idx = self.find(first_node);
         let second_set_idx = self.find(second_node);
 
-        let mut first_set = self.nodes[first_set_idx];
-        let mut second_set = self.nodes[second_set_idx];
+        let mut first_set = self.nodes[first_set_idx.0];
+        let mut second_set = self.nodes[second_set_idx.0];
 
         if first_set.idx == second_set.idx {
             return;
@@ -78,25 +90,25 @@ impl UnionFind<usize> for A {
             (first_set, second_set) = (second_set, first_set);
         }
 
-        self.nodes[first_set.idx].parent_idx = second_set.idx;
-        self.nodes[second_set.idx].size += first_set.size;
+        self.nodes[first_set.idx.0].parent_idx = second_set.idx;
+        self.nodes[second_set.idx.0].size += first_set.size;
     }
 
-    fn find(&mut self, node: usize) -> usize {
-        let mut node = self.nodes[node];
+    fn find(&mut self, node: NodeIdx) -> NodeIdx {
+        let mut node = self.nodes[node.0];
 
         let mut nodes_to_update = Vec::new();
 
         while node.idx != node.parent_idx {
             nodes_to_update.push(node);
-            node = self.nodes[node.parent_idx];
+            node = self.nodes[node.parent_idx.0];
         }
 
         let parent = node;
 
         for node in nodes_to_update {
-            self.nodes[node.parent_idx].size -= node.size;
-            self.nodes[node.idx].parent_idx = parent.idx;
+            self.nodes[node.parent_idx.0].size -= node.size;
+            self.nodes[node.idx.0].parent_idx = parent.idx;
         }
 
         parent.idx
