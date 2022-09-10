@@ -21,7 +21,7 @@ where
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct NodeIdx(usize);
 
 impl std::ops::Deref for NodeIdx {
@@ -57,17 +57,17 @@ impl PartialEq for Node {
 impl Eq for Node {}
 
 #[derive(Debug)]
-pub struct A {
+pub struct FastUnionFind {
     nodes: Vec<Node>,
 }
 
-impl A {
+impl FastUnionFind {
     pub fn new() -> Self {
         Self { nodes: Vec::new() }
     }
 }
 
-impl UnionFind<NodeIdx> for A {
+impl UnionFind<NodeIdx> for FastUnionFind {
     fn add_element(&mut self) -> NodeIdx {
         let idx = NodeIdx(self.nodes.len());
         self.nodes.push(Node::new(idx));
@@ -99,12 +99,12 @@ impl UnionFind<NodeIdx> for A {
 
         let mut nodes_to_update = Vec::new();
 
-        while node.idx != node.parent_idx {
+        while self.nodes[node.parent_idx.0].parent_idx != node.parent_idx {
             nodes_to_update.push(node);
             node = self.nodes[node.parent_idx.0];
         }
 
-        let parent = node;
+        let parent = self.nodes[node.parent_idx.0];
 
         for node in nodes_to_update {
             self.nodes[node.parent_idx.0].size -= node.size;
