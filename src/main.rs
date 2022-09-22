@@ -1,3 +1,8 @@
+use crate::maze::Maze;
+
+mod maze;
+mod union_find;
+
 fn main() {
-    println!("Hello, world!");
+    println!("{}", Maze::random(5, 5));
 }
